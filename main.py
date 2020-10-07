@@ -1,4 +1,8 @@
 import folium
+import pandas
+
+data
+
 map = folium.Map(location=[6.160066, 125.116242], zoom_start=12)
 
 mapFeatureGroup = folium.FeatureGroup(name="Explored Horizons")
