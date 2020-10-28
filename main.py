@@ -1,30 +1,34 @@
 import folium
 import pandas
 
-data = pandas.read_csv("volcano.csv")
+data = pandas.read_csv("volcano.csv", encoding="cp1252")
 lat = list(data["LATITUDE"])
 lon = list(data["LONGITUDE"])
-elev = list(data["ELEV"])
+pro = list(data["PROVINCE"])
+elev = list(data["ELEVATION"])
+picture = list(data["PICTURE"])
+VolName = list(data["NAME"])
 
-map = folium.Map(location=[6.160066, 125.116242], zoom_start=12)
+mapworld = folium.Map(location=[6.160066, 125.116242], zoom_start=5)
 
+mapVolcano = folium.FeatureGroup(name="Volcanoes")
 
-def elevationParameters(elevate):
-    if elevate < 1000:
-        return "green"
-    elif 1000 <= elevate < 2000:
-        return "red"
-    else:
-        return "red"
+for latitude, longitude, volcanoName, province, elevation, pic in zip(lat, lon, VolName, pro, elev, picture):
+    mapVolcano.add_child(folium.Marker(location=[latitude, longitude]
+                                       , popup="<b> Name: </b> Mt." + volcanoName + "<br> <b> Place: </b> " + province +
+                                               "<br>" + " <b>Elevation:</b> " + str(elevation) + " m" + "<br>" +
+                                               "<img src=" + pic + " height=142 width=290>", marker_color="yellow"))
+    # fill_color=elevationParameters(volcanoName),
+    # fill_opacity=0.7))
 
+mapPopulation = folium.FeatureGroup(name="Population")
+mapPopulation.add_child(folium.GeoJson(data=open('world.json', 'r', encoding='utf-8-sig').read(),
+                                       style_function=lambda x: {
+                                           'fillColor': 'green' if x['properties']['POP2005'] < 10000000
+                                           else 'orange' if 10000000 <= x['properties']['POP2005'] < 20000000
+                                           else 'red'}))
 
-mapFeatureGroup = folium.FeatureGroup(name="Volcanoes")
-
-for ltitude, lngitude, elevation in zip(lat, lon, elev):
-    mapFeatureGroup.add_child(folium.CircleMarker(location=[ltitude,lngitude], radius=7, popup=str(elevation)+"m",
-                                                  fill_color=elevationParameters(elevation), color="grey", fill_opacity=0.7))
-
-mapFeatureGroup.add_child(folium.GeoJson(data = (open('world.json','r', encoding='utf-8-sig').read())))
-
-map.add_child(mapFeatureGroup)
-map.save("firstMap.html")
+mapworld.add_child(mapVolcano)
+mapworld.add_child(mapPopulation)
+mapworld.add_child(folium.LayerControl())
+mapworld.save("firstMap.html")
